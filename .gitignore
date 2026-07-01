@@ -1,0 +1,4 @@
+node_modules/
+__pycache__/
+.env
+ml_worker/data/creditcard.csv

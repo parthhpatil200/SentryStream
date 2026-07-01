@@ -1,0 +1,18 @@
+{
+  "name": "sentrystream-monorepo",
+  "version": "1.0.0",
+  "description": "Root orchestrator for SentryStream pipeline",
+  "scripts": {
+    "infra:up": "docker compose up -d",
+    "infra:down": "docker compose down",
+    "kill-conflicts": "powershell -Command \"Stop-Service postgresql* -ErrorAction SilentlyContinue\"",
+    "start:backend": "cd backend && node server.js",
+    "start:producer": "cd backend && node producer.js",
+    "start:ml": "cd ml_worker && python consumer.py",
+    "start:frontend": "cd frontend && npm run dev",
+    "dev": "npm run kill-conflicts && npm run infra:up && concurrently \"npm run start:backend\" \"npm run start:ml\" \"npm run start:frontend\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
