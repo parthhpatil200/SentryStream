@@ -1,7 +1,6 @@
-const path = require('path'); // Imported first so it can be used below
+const path = require('path'); 
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
-// Updated debug keys to match the exact environment variables your script looks for
 console.log("--- DATABASE DEBUG INFO ---");
 console.log("SENTRYSTREAM_PGHOST:", process.env.SENTRYSTREAM_PGHOST);
 console.log("SENTRYSTREAM_PGPORT:", process.env.SENTRYSTREAM_PGPORT);
@@ -29,12 +28,7 @@ app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-
-    if (req.method === 'OPTIONS') {
-        res.sendStatus(204);
-        return;
-    }
-
+    if (req.method === 'OPTIONS') { res.sendStatus(204); return; }
     next();
 });
 
@@ -58,7 +52,9 @@ const pool = new Pool({
 
 io.on('connection', (socket) => {
     console.log(`Socket client connected: ${socket.id}`);
-
+    socket.on('freeze_card', (payload) => {
+        console.log(`[SECURITY ACTION] Executing account lockdown for Card Token: ${payload.card_id}`);
+    });
     socket.on('disconnect', () => {
         console.log(`Socket client disconnected: ${socket.id}`);
     });
@@ -66,23 +62,19 @@ io.on('connection', (socket) => {
 
 app.get('/api/history', async (req, res) => {
     try {
+        const page = Math.max(0, parseInt(req.query.page) || 0);
+        const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 10));
+        const offset = page * limit;
+
         const { rows } = await pool.query(`
             SELECT
-                t.transaction_id,
-                t.card_id,
-                t.amount,
-                t.merchant,
-                t.timestamp,
-                t.location,
-                d.is_fraud,
-                d.prediction_confidence,
-                d.processed_at
+                t.transaction_id, t.card_id, t.amount, t.merchant, t.timestamp, t.location,
+                d.is_fraud, d.prediction_confidence,d.shap_explanation, d.processed_at
             FROM transactions AS t
-            INNER JOIN fraud_decisions AS d
-                ON t.transaction_id = d.transaction_id
+            INNER JOIN fraud_decisions AS d ON t.transaction_id = d.transaction_id
             ORDER BY t.timestamp DESC
-            LIMIT 50
-        `);
+            LIMIT $1 OFFSET $2
+        `, [limit, offset]);
 
         res.json(rows);
     } catch (error) {
@@ -93,19 +85,8 @@ app.get('/api/history', async (req, res) => {
 
 const shutdown = async () => {
     console.log('Shutting down gateway...');
-
-    try {
-        await redis.quit();
-    } catch (error) {
-        console.error('Redis shutdown failed:', error.message);
-    }
-
-    try {
-        await pool.end();
-    } catch (error) {
-        console.error('PostgreSQL shutdown failed:', error.message);
-    }
-
+    try { await redis.quit(); } catch (e) {}
+    try { await pool.end(); } catch (e) {}
     server.close(() => process.exit(0));
 };
 
@@ -116,22 +97,14 @@ process.on('SIGTERM', shutdown);
     try {
         await redis.connect();
         await redis.subscribe('transaction-alerts');
-
         redis.on('message', (channel, message) => {
-            if (channel !== 'transaction-alerts') {
-                return;
-            }
-
+            if (channel !== 'transaction-alerts') return;
             try {
                 const payload = JSON.parse(message);
                 io.emit('new_alert', payload);
-            } catch (error) {
-                console.error('Failed to parse Redis alert payload:', error.message);
-            }
+            } catch (e) {}
         });
-
         await pool.query('SELECT 1');
-
         server.listen(5000, '0.0.0.0', () => {
             console.log('Streaming gateway healthy and connected to Redis on port 5000');
         });

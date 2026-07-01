@@ -55,7 +55,7 @@ const buildTransaction = () => {
 		transaction_id: uuidv4(),
 		card_id: buildCardId(),
 		timestamp: new Date().toISOString(),
-		Time: timeCounter,
+		Time: 0,
 		Amount: amount,
 		merchant: MERCHANTS[randomInt(0, MERCHANTS.length - 1)],
 		location: LOCATIONS[randomInt(0, LOCATIONS.length - 1)],
