@@ -158,6 +158,28 @@ services:
 
     restart: unless-stopped
 
+  producer:
+
+    build:
+      context: ./backend
+
+    container_name: sentrystream-producer
+
+    command: node producer.js
+
+    networks:
+      - sentrystream_network
+
+    environment:
+
+      SENTRYSTREAM_KAFKA_BROKER: kafka:9092
+
+    depends_on:
+
+      kafka:
+        condition: service_healthy
+
+    restart: unless-stopped
 
   #################################################
   # ML WORKER
@@ -179,9 +201,9 @@ services:
 
       SENTRYSTREAM_PGHOST: postgres
       SENTRYSTREAM_PGPORT: 5432
-      SENTRYSTREAM_PGDATABASE: sentrystream_db
-      SENTRYSTREAM_PGUSER: sentrystream
-      SENTRYSTREAM_PGPASSWORD: SentryStreamPass123
+      SENTRYSTREAM_PGDATABASE: ${POSTGRES_DB}
+      SENTRYSTREAM_PGUSER: ${POSTGRES_USER}
+      SENTRYSTREAM_PGPASSWORD: ${POSTGRES_PASSWORD}
 
       SENTRYSTREAM_REDIS_HOST: redis
       SENTRYSTREAM_REDIS_PORT: 6379
