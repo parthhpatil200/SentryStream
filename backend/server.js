@@ -1,5 +1,5 @@
 const path = require('path'); 
-require('dotenv').config({ path: path.join(__dirname, '.env') });
+require('dotenv').config({ path: path.join(__dirname, '.env') }); //It reads .env and copies everything into process.env.
 
 console.log("--- DATABASE DEBUG INFO ---");
 console.log("SENTRYSTREAM_PGHOST:", process.env.SENTRYSTREAM_PGHOST);

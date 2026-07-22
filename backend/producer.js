@@ -1,7 +1,7 @@
 const { Kafka } = require('kafkajs');
 const { v4: uuidv4 } = require('uuid');
 
-const BROKER = 'localhost:9094';
+const BROKER = process.env.SENTRYSTREAM_KAFKA_BROKER || "localhost:9094";
 const CLIENT_ID = 'sentrystream-producer';
 const TOPIC = 'raw-transactions';
 const ANOMALY_RATE = 0.08; // Arrives regularly every ~12-15 transactions

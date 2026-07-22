@@ -18,17 +18,17 @@ from decimal import Decimal
 from typing import Any, Dict
 
 import numpy as np
-import shap
+from xgboost import XGBClassifier
+#import shap
 import psycopg2
 import redis
 from kafka import KafkaConsumer
 from kafka.consumer.fetcher import ConsumerRecord
 from kafka.structs import OffsetAndMetadata, TopicPartition
 from psycopg2.extras import Json
-from xgboost import XGBClassifier
 
 
-KAFKA_BOOTSTRAP_SERVERS = ["localhost:9094"]
+KAFKA_BOOTSTRAP_SERVERS = [os.getenv("SENTRYSTREAM_KAFKA_BROKER", "localhost:9094")]
 KAFKA_TOPIC = "raw-transactions"
 KAFKA_GROUP_ID = "sentrystream-ml-group"
 MODEL_PATH = Path(__file__).with_name("fraud_model.json")
@@ -75,15 +75,17 @@ def build_database_connection():
 
 def load_model():
     """Load the saved mock XGBoost model from disk."""
-
+    print("Step 1: Creating model")
     model = XGBClassifier()
+    print("Step 2: About to load")
     model.load_model(MODEL_PATH)
+    print("Step 3: Loaded!")
     return model
 
 
 def build_explainer(model):
     """Create a TreeSHAP explainer for the loaded model."""
-
+    import shap
     return shap.TreeExplainer(model)
 
 
@@ -222,17 +224,18 @@ def process_message(
             "prediction_confidence": prediction_probability,
             "shap_explanation": shap_summary,
         }
-        redis_client = redis.Redis(host="127.0.0.1", port=6379, decode_responses=True)
+        redis_client = redis.Redis(host=os.getenv("SENTRYSTREAM_REDIS_HOST", "127.0.0.1"),port=int(os.getenv("SENTRYSTREAM_REDIS_PORT", "6379")),decode_responses=True,)
         redis_client.publish("transaction-alerts", json.dumps(alert_payload))
 
         consumer.commit(
             offsets={
                 TopicPartition(message.topic, message.partition): OffsetAndMetadata(
                     message.offset + 1,
-                    None,
+                    None,      # matadata
+                    -1     # leader_epoch
                 )
             }
-        )
+        )   ##Commit Kafka Offset
         logger.info(
             "Processed transaction_id=%s fraud_probability=%.4f partition=%s offset=%s",
             transaction.get("transaction_id"),
