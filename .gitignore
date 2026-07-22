@@ -1,4 +1,39 @@
+# Node
 node_modules/
+
+# Python
 __pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+venv/
+
+# Environment
 .env
+.env.*
+
+# Logs
+*.log
+
+# Build
+dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Dataset
 ml_worker/data/creditcard.csv
+
+# Python cache
+.pytest_cache/
+.mypy_cache/
+
+# Docker
+*.pid

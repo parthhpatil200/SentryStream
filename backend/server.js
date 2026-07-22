@@ -1,12 +1,12 @@
 const path = require('path'); 
 require('dotenv').config({ path: path.join(__dirname, '.env') }); //It reads .env and copies everything into process.env.
 
-console.log("--- DATABASE DEBUG INFO ---");
-console.log("SENTRYSTREAM_PGHOST:", process.env.SENTRYSTREAM_PGHOST);
-console.log("SENTRYSTREAM_PGPORT:", process.env.SENTRYSTREAM_PGPORT);
-console.log("SENTRYSTREAM_PGUSER:", process.env.SENTRYSTREAM_PGUSER);
-console.log("SENTRYSTREAM_PGPASSWORD:", process.env.SENTRYSTREAM_PGPASSWORD);
-console.log("---------------------------");
+// console.log("--- DATABASE DEBUG INFO ---");
+// console.log("SENTRYSTREAM_PGHOST:", process.env.SENTRYSTREAM_PGHOST);
+// console.log("SENTRYSTREAM_PGPORT:", process.env.SENTRYSTREAM_PGPORT);
+// console.log("SENTRYSTREAM_PGUSER:", process.env.SENTRYSTREAM_PGUSER);
+// console.log("SENTRYSTREAM_PGPASSWORD:", process.env.SENTRYSTREAM_PGPASSWORD);
+// console.log("---------------------------");
 
 const express = require('express');
 const http = require('http');
