@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { io } from 'socket.io-client'
 import './App.css'
-
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 let globalSocket = null;
 
 function formatCardToken(cardId) {
@@ -219,7 +219,7 @@ function App() {
   const fetchHistoryPage = useCallback(async (targetPage) => {
     if (targetPage === 0) return;
     try {
-      const response = await fetch(`http://127.0.0.1:5000/api/history?page=${targetPage}&limit=10`)
+      const response = await fetch(`${BACKEND_URL}/api/history?page=${targetPage}&limit=10`)
       if (!response.ok) throw new Error(`History error: ${response.status}`)
       const data = await response.json()
       setHistoryAlerts(data.map(normalizeAlert))
@@ -230,12 +230,12 @@ function App() {
 
   useEffect(() => {
     let isMounted = true
-    const socket = io('http://127.0.0.1:5000', { transports: ['websocket'] })
+    const socket = io(BACKEND_URL, { transports: ['websocket'] })
     globalSocket = socket;
 
     const loadInitialHistory = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:5000/api/history?page=0&limit=10')
+        const response = await fetch(`${BACKEND_URL}/api/history?page=0&limit=10`)
         if (!response.ok) throw new Error(`Startup error: ${response.status}`)
         const history = await response.json()
         if (!isMounted) return
@@ -394,3 +394,4 @@ function App() {
 }
 
 export default App
+

@@ -16,22 +16,29 @@ const { Pool } = require('pg');
 
 const app = express();
 const server = http.createServer(app);
+const FRONTEND_URL = 'http://sentrystream-frontend-parth.s3-website.ap-south-1.amazonaws.com';
 const io = new Server(server, {
     cors: {
-        origin: '*',
+        origin: FRONTEND_URL,
         methods: ['GET', 'POST'],
     },
 });
 
 app.use(express.json());
 app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Origin', FRONTEND_URL);
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
     if (req.method === 'OPTIONS') { res.sendStatus(204); return; }
     next();
 });
-
+app.get('/health', (req, res) => {
+    res.status(200).json({
+        status: "ok",
+        service: "SentryStream Backend",
+        timestamp: new Date().toISOString()
+    });
+});
 const redis = new Redis({
     host: process.env.SENTRYSTREAM_REDIS_HOST || '127.0.0.1',
     port: Number(process.env.SENTRYSTREAM_REDIS_PORT || 6379),

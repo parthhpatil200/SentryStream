@@ -23,7 +23,7 @@ services:
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
-
+      KAFKA_HEAP_OPTS: "-Xms256m -Xmx512m"
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
 
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
@@ -218,31 +218,6 @@ services:
 
       redis:
         condition: service_healthy
-
-    restart: unless-stopped
-
-
-  #################################################
-  # FRONTEND
-  #################################################
-
-  frontend:
-
-    build:
-      context: ./frontend
-
-    container_name: sentrystream-frontend
-
-    networks:
-      - sentrystream_network
-
-    ports:
-      - "4173:4173"
-
-    depends_on:
-
-      backend:
-        condition: service_started
 
     restart: unless-stopped
 
